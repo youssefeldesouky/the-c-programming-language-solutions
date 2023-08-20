@@ -2,16 +2,15 @@
  *  @brief Implementation for Exercise 1-14.
  *  
  *  Exercise 1-14. Write a program to print a histogram of the frequencies
- *                 of different characters in its input.
+ *  of different characters in its input.
  * 
  *  @author Youssef Samir
  *  @bug No Known Bugs.
 */
 
 #include <stdio.h>
-/**
- * @brief Defines the number of letters. 
-*/
+
+//Defines the number of letters.
 #define CHARS 26
 
 /** @brief A function that counts the frequency of each character in the stdin file,

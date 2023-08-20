@@ -2,17 +2,16 @@
  *  @brief Implementation for Exercise 1-13.
  *  
  *  Exercise 1-13. Write a program to print a histogram of the lengths
- *                 of words in its input. It is easy to draw the histogram
- *                 with the bars horizontal; a vertical orientation is more challenging. 
+ *  of words in its input. It is easy to draw the histogram with the bars
+ *  horizontal; a vertical orientation is more challenging. 
  * 
  *  @author Youssef Samir
  *  @bug No Known Bugs.
 */
 
 #include <stdio.h>
-/**
- * @brief Defines the maximum word Length to be counted. 
-*/
+
+//Defines the maximum word Length to be counted.
 #define MAXLEN 10
 
 /** @brief A function that counts the lengths of each word in the stdin file,
