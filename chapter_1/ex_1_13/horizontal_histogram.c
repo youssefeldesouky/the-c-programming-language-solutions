@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 // Defines the maximum word Length to be counted. 
-#define MAXLEN 10
+#define MAXLEN 10U
 
 /** @brief A function that counts the lengths of each word in the stdin file,
  *         then it draws a horizontal histogram for all those lengths.
@@ -20,7 +20,7 @@
 */
 void horizontal_histogram(void)
 {
-    int lens[MAXLEN] = {0};
+    unsigned int lens[MAXLEN] = {0};
     char state = 0;
     int c = '\0';
     unsigned int len = 0;
@@ -41,10 +41,10 @@ void horizontal_histogram(void)
             len++;
         }
     }
-    for(int i = 0; i < MAXLEN; i++)
+    for(unsigned int i = 0; i < MAXLEN; i++)
     {
         printf("%2d| ", i+1);
-        for(int j = 0; j < lens[i]; putchar('*'), j++);
+        for(unsigned int j = 0; j < lens[i]; putchar('*'), j++);
         putchar('\n');
     }
 }

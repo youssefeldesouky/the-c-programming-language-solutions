@@ -53,7 +53,7 @@ int n_getline(char buf[], size_t len){
 void reverse(char src[], size_t len){
     char tmp[len];
     copy_str(tmp, src, len);
-    for(int i = 0; i < len; i++){
+    for(size_t i = 0; i < len; i++){
         src[i] = tmp[len-i-1];
     }
 }
@@ -65,7 +65,6 @@ void reverse(char src[], size_t len){
 void reverse_input(void){
     char buf[MAXLEN] = "\0";
     size_t len;
-    int i;
     while((len=n_getline(buf, MAXLEN)) != 0){
         if(len > 0){
             reverse(buf, len);
