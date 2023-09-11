@@ -21,7 +21,7 @@
 #define SET_VAR 3
 #define GET_VAR 4
 #define GET_LAST 5
-#define BUF_SIZE 100
+#define BUF_SIZE 1000
 #define VAR_SIZE 26
 
 int n_getline(char buf[], size_t len);
@@ -255,7 +255,8 @@ void ungetch(void){
 }
 
 /** @brief A function that moves a line from stdin to a buffer while keeping track
- *         of its length
+ *         of its length. (This is modified to include the Newline character for it
+ *         to work with the calculator). 
  *  @param buf The string buffer that will contain the captured line
  *  @param len The maximum length of a line
  *  @return The length of the captured line
