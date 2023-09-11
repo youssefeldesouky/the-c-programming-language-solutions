@@ -173,13 +173,14 @@ size_t buf_ptr = 0;
  *         supports the use of a buffer, which contains pushed-back values.
  *  @return The character, either from stdin or the characters buffer.
 */
-int getch(){
+int getch(void){
     return (buf_ptr > 0) ? input_buf[--buf_ptr] : getchar();
 }
 
 /** @brief A function that pushes back a character onto the characters buffer,
  *         emulating the ability to write back values to stdin.
  *  @param c The character to be pushed onto the buffer.
+ *  @return void.
 */
 void ungetch(int c){
     if(buf_ptr >= BUF_SIZE){

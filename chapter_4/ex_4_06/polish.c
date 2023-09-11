@@ -1,8 +1,9 @@
 /** @file polish.c
- *  @brief Implementation for Exercise 4-4.
+ *  @brief Implementation for Exercise 4-6.
  * 
- *  Add the commands to print the top elements of the stack without popping,
- *  to duplicate it, and to swap the top two elements. Add a command to clear the stack.
+ *  Add commands for handling variables. (It's easy to provide twenty-six
+ *  variables with single-letter names.) Add a variable for the most recently 
+ *  printed value. 
  * 
  *  @author Youssef Samir
  *  @bug No Known Bugs.
@@ -17,18 +18,29 @@
 #define STACK_SIZE 100
 #define NUMBER 0
 #define CMD 1
+#define SET_VAR 2
+#define GET_VAR 3
+#define GET_LAST 4
 #define BUF_SIZE 100
+#define VAR_SIZE 26
 
 int getop(char s[]);
 double atof(const char *src);
 void push(double value);
 double pop(void);
+double peek(void);
 
 //Commands Prototypes
 void top(void);
 void duplicate(void);
 void swap(void);
 void clear(void);
+void sine(void);
+void exponent(void);
+void power(void);
+
+//Used in conjunction with newline, to prevent popping the top of the stack.
+bool top_called = false;
 
 //Compile with the option -lm coming after the source file name to include the math library
 //To stop error messages from displaying, redirect it to /dev/null, ex: ./a.out 2> /dev/null
@@ -38,6 +50,8 @@ int main(){
     int type = 0;
     double op2 = 0.0;
     bool error = false;
+    double variables[VAR_SIZE] = { 0.0 };
+    double last_value = 0.0;
     while((type = getop(buf)) != EOF){
         switch (type)
         {
@@ -47,13 +61,32 @@ int main(){
             case CMD:
                 if(!strcmp(buf, "clr") || !strcmp(buf, "c")){
                     clear();
-                }else if(!strcmp(buf, "top") || !strcmp(buf, "t")){
+                }else if(!strcmp(buf, "top")){
                     top();
-                }else if(!strcmp(buf, "dup") || !strcmp(buf, "d")){
+                }else if(!strcmp(buf, "dup")){
                     duplicate();
-                }else if(!strcmp(buf, "swp") || !strcmp(buf, "s")){
+                }else if(!strcmp(buf, "swp")){
                     swap();
+                }else if(!strcmp(buf, "sin")){
+                    sine();
+                }else if(!strcmp(buf, "exp")){
+                    exponent();
+                }else if(!strcmp(buf, "pow")){
+                    power();
+                }else{
+                    fprintf(stderr, "Error! Incorrect Operator!\n");
+                    error = true;
+                    break;
                 }
+                break;
+            case SET_VAR:
+                variables[tolower(buf[0]) - 'a'] = pop();
+                break;
+            case GET_VAR:
+                push(variables[tolower(buf[0]) - 'a']);
+                break;
+            case GET_LAST:
+                push(last_value);
                 break;
             case '+':
                 push(pop() + pop());
@@ -85,7 +118,12 @@ int main(){
                 break;
             case '\n':
                 if(!error){
-                    printf("Ans:\t%.8g\n", pop());
+                    if(top_called){
+                        printf("Ans:\t%.8g\n", (last_value = peek()));
+                        top_called = false;
+                    }else{
+                        printf("Ans:\t%.8g\n", (last_value = pop()));
+                    }
                 }else{
                     error = false;
                 }
@@ -177,6 +215,17 @@ double pop(void){
     return stack[--stack_ptr];
 }
 
+/** @brief A function that returns the top of a stack without popping.
+ *  @return The top value, or a 0.0 if the stack was empty.
+*/
+double peek(void){
+    if(stack_ptr == 0){
+        fprintf(stderr, "Error! Stack is empty!\n");
+        return 0.0;
+    }
+    return stack[stack_ptr - 1];
+}
+
 int input_buf[BUF_SIZE] = {0};
 size_t buf_ptr = 0;
 
@@ -205,7 +254,7 @@ void ungetch(int c){
  *         and determines its type.
  *  @param s A character array that will store the number read from stdin.
  *  @return Returns either a code that represents the operator or an indicator
- *          that a special type has been captured (Number, Special Operator).
+ *          that a special type has been captured (Number, Variable, Special Operator).
 */
 int getop(char s[]){
     int c;
@@ -219,15 +268,26 @@ int getop(char s[]){
                 s[str_ptr] = '\0';
                 if(isdigit(s[str_ptr - 1])){
                     return NUMBER;
+                }else if(strlen(s) == 1){
+                    return GET_VAR;
                 }else{
                     return CMD;
                 }
-                
             }else{
                 int temp = 0;
-                if( (c == '+' || c == '-') && isdigit((temp = getch()))){
+                if((c == '+' || c == '-') && isdigit((temp = getch()))){
                     s[str_ptr++] = c;
                     ungetch(temp);
+                }else if((c == '=')){
+                    if(isalpha(temp = getch())){
+                        s[str_ptr++] = temp;
+                        s[stack_ptr] = '\0';
+                        return SET_VAR;
+                    }else{
+                        ungetch(temp);
+                    }
+                }else if((c == '_')){
+                    return GET_LAST;
                 }else{
                     if(temp) ungetch(temp);
                     return c;
@@ -247,13 +307,11 @@ void clear(void){
     stack_ptr = 0;
 }
 
-/** @brief A function that print the top of a stack without popping it,
- *         by incrementing the stack pointer to compensate for the decrement
- *         done when Enter is pressed.
+/** @brief A function that print the top of a stack without popping it.
  *  @return void.
 */
 void top(void){
-    stack_ptr += stack_ptr < STACK_SIZE;
+    top_called = true;
 }
 
 /** @brief A function that duplicates the current top value on the stack.
@@ -276,4 +334,37 @@ void swap(void){
     double op2 = pop();
     push(op1);
     push(op2);
+}
+
+/** @brief A function that calculates the sine of a value.
+ *  @return void.
+*/
+void sine(void){
+    if(stack_ptr < 1){
+        fprintf(stderr, "Error! Insufficient elements on the stack!\n");
+    }
+    push(sin(pop()));
+}
+
+/** @brief A function that calculates the value of e ^ (top of the stack).
+ *  @return void.
+*/
+void exponent(void){
+    if(stack_ptr < 1){
+        fprintf(stderr, "Error! Insufficient elements on the stack!\n");
+    }
+    push(exp(pop()));
+}
+
+/** @brief A function that calculates the value x ^ y, y and x are the
+ *         topmost values on the stack respectively.
+ *  @return void.
+*/
+void power(void){
+    if(stack_ptr < 2){
+        fprintf(stderr, "Error! Insufficient elements on the stack!\n");
+    }
+    double op1 = pop();
+    double op2 = pop();
+    push(pow(op2, op1));
 }
