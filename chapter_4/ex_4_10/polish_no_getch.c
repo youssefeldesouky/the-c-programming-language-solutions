@@ -1,11 +1,11 @@
-/** @file polish.c
+/** @file polish_no_getch.c
  *  @brief Implementation for Exercise 4-10.
  * 
  *  An alternate organization uses getline to read an entire input
  *  line; this makes getch and ungetch unnecessary. Revise the calculator
- *  to use this approach.
- * 
- *  Here getch() and ungetch() are used to manipulate the input buffer pointer.
+ *  to use this approach. 
+ *  
+ *  Here getop() directly accesses the input buffer with its pointer variable.
  * 
  *  @author Youssef Samir
  *  @bug No Known Bugs.
@@ -235,25 +235,6 @@ double peek(void){
     return stack[stack_ptr - 1];
 }
 
-/** @brief A function that gets the next character from a string buffer.
- *  @return The character in the input buffer pointed at by the pointer.
-*/
-int getch(void){
-    return input_buf[buf_ptr++];
-}
-
-/** @brief A function that decrements the input buffer's pointer to point
- *         at the previous character.
- *  @return void.
-*/
-void ungetch(void){
-    if(buf_ptr <= 0){
-        fprintf(stderr, "Error! Buffer is full!\n");
-        return;
-    }
-    buf_ptr--;
-}
-
 /** @brief A function that moves a line from stdin to a buffer while keeping track
  *         of its length. (This is modified to include the Newline character for it
  *         to work with the calculator). 
@@ -284,12 +265,12 @@ int n_getline(char buf[], size_t len){
 int getop(char s[]){
     int c;
     size_t str_ptr = 0;
-    while(isblank((c = getch())));
-    ungetch();
-    while((c = getch()) != EOF && c != '\0'){
+    while(isblank((c = input_buf[buf_ptr++])));
+    buf_ptr--;
+    while((c = input_buf[buf_ptr++]) != EOF && c != '\0'){
         if(!isalnum(c) && c != '.'){
             if(str_ptr > 0){
-                ungetch();
+                buf_ptr--;
                 s[str_ptr] = '\0';
                 if(isdigit(s[str_ptr - 1])){
                     return NUMBER;
@@ -300,21 +281,21 @@ int getop(char s[]){
                 }
             }else{
                 int temp = 0;
-                if((c == '+' || c == '-') && isdigit((temp = getch()))){
+                if((c == '+' || c == '-') && isdigit((temp = input_buf[buf_ptr++]))){
                     s[str_ptr++] = c;
-                    ungetch();
+                    buf_ptr--;
                 }else if((c == '=')){
-                    if(isalpha(temp = getch())){
+                    if(isalpha(temp = input_buf[buf_ptr++])){
                         s[str_ptr++] = temp;
                         s[stack_ptr] = '\0';
                         return SET_VAR;
                     }else{
-                        ungetch();
+                        buf_ptr--;
                     }
                 }else if((c == '_')){
                     return GET_LAST;
                 }else{
-                    if(temp) ungetch();
+                    if(temp) buf_ptr--;
                     return c;
                 }
             }

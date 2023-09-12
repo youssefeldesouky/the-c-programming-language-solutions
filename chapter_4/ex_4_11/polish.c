@@ -1,11 +1,8 @@
 /** @file polish.c
- *  @brief Implementation for Exercise 4-10.
+ *  @brief Implementation for Exercise 4-11.
  * 
- *  An alternate organization uses getline to read an entire input
- *  line; this makes getch and ungetch unnecessary. Revise the calculator
- *  to use this approach.
- * 
- *  Here getch() and ungetch() are used to manipulate the input buffer pointer.
+ *  Modify getop so that it doesn't need to use ungetch. 
+ *  Hint: use an internal static variable.
  * 
  *  @author Youssef Samir
  *  @bug No Known Bugs.
@@ -18,15 +15,14 @@
 #include <math.h>
 
 #define STACK_SIZE 100
-#define NUMBER 1
-#define CMD 2
-#define SET_VAR 3
-#define GET_VAR 4
-#define GET_LAST 5
-#define BUF_SIZE 1000
+#define NUMBER 0
+#define CMD 1
+#define SET_VAR 2
+#define GET_VAR 3
+#define GET_LAST 4
+#define BUF_SIZE 100
 #define VAR_SIZE 26
 
-int n_getline(char buf[], size_t len);
 int getop(char s[]);
 double atof(const char *src);
 void push(double value);
@@ -42,9 +38,6 @@ void sine(void);
 void exponent(void);
 void power(void);
 
-char input_buf[BUF_SIZE] = {0};
-size_t buf_ptr = 0;
-
 //Used in conjunction with newline, to prevent popping the top of the stack.
 bool top_called = false;
 
@@ -58,90 +51,87 @@ int main(){
     bool error = false;
     double variables[VAR_SIZE] = { 0.0 };
     double last_value = 0.0;
-    while(n_getline(input_buf, BUF_SIZE)){
-        buf_ptr = 0;
-        while((type = getop(buf)) != '\0'){
-            switch (type)
-            {
-                case NUMBER:
-                    push(atof(buf));
-                    break;
-                case CMD:
-                    if(!strcmp(buf, "clr") || !strcmp(buf, "c")){
-                        clear();
-                    }else if(!strcmp(buf, "top")){
-                        top();
-                    }else if(!strcmp(buf, "dup")){
-                        duplicate();
-                    }else if(!strcmp(buf, "swp")){
-                        swap();
-                    }else if(!strcmp(buf, "sin")){
-                        sine();
-                    }else if(!strcmp(buf, "exp")){
-                        exponent();
-                    }else if(!strcmp(buf, "pow")){
-                        power();
-                    }else{
-                        fprintf(stderr, "Error! Incorrect Operator!\n");
-                        error = true;
-                        break;
-                    }
-                    break;
-                case SET_VAR:
-                    variables[tolower(buf[0]) - 'a'] = pop();
-                    break;
-                case GET_VAR:
-                    push(variables[tolower(buf[0]) - 'a']);
-                    break;
-                case GET_LAST:
-                    push(last_value);
-                    break;
-                case '+':
-                    push(pop() + pop());
-                    break;
-                case '-':
-                    op2 = pop();
-                    push(pop() - op2);
-                    break;
-                case '*':
-                    push(pop() * pop());
-                    break;
-                case '/':
-                    op2 = pop();
-                    if(op2 == 0.0){
-                        fprintf(stderr, "Error! Cannot divide by zero!\n");
-                        error = true;
-                        break;
-                    }
-                    push(pop() / op2);
-                    break;
-                case '%':
-                    op2 = pop();
-                    if(op2 == 0.0){
-                        fprintf(stderr, "Error! Cannot divide by zero!\n");
-                        error = true;
-                        break;
-                    }
-                    push(fmod(pop(), op2));
-                    break;
-                case '\n':
-                    if(!error){
-                        if(top_called){
-                            printf("Ans:\t%.8g\n", (last_value = peek()));
-                            top_called = false;
-                        }else{
-                            printf("Ans:\t%.8g\n", (last_value = pop()));
-                        }
-                    }else{
-                        error = false;
-                    }
-                    break;
-                default:
+    while((type = getop(buf)) != EOF){
+        switch (type)
+        {
+            case NUMBER:
+                push(atof(buf));
+                break;
+            case CMD:
+                if(!strcmp(buf, "clr") || !strcmp(buf, "c")){
+                    clear();
+                }else if(!strcmp(buf, "top")){
+                    top();
+                }else if(!strcmp(buf, "dup")){
+                    duplicate();
+                }else if(!strcmp(buf, "swp")){
+                    swap();
+                }else if(!strcmp(buf, "sin")){
+                    sine();
+                }else if(!strcmp(buf, "exp")){
+                    exponent();
+                }else if(!strcmp(buf, "pow")){
+                    power();
+                }else{
+                    fprintf(stderr, "Error! Incorrect Operator!\n");
                     error = true;
                     break;
-            }
-        } 
-    }
+                }
+                break;
+            case SET_VAR:
+                variables[tolower(buf[0]) - 'a'] = pop();
+                break;
+            case GET_VAR:
+                push(variables[tolower(buf[0]) - 'a']);
+                break;
+            case GET_LAST:
+                push(last_value);
+                break;
+            case '+':
+                push(pop() + pop());
+                break;
+            case '-':
+                op2 = pop();
+                push(pop() - op2);
+                break;
+            case '*':
+                push(pop() * pop());
+                break;
+            case '/':
+                op2 = pop();
+                if(op2 == 0.0){
+                    fprintf(stderr, "Error! Cannot divide by zero!\n");
+                    error = true;
+                    break;
+                }
+                push(pop() / op2);
+                break;
+            case '%':
+                op2 = pop();
+                if(op2 == 0.0){
+                    fprintf(stderr, "Error! Cannot divide by zero!\n");
+                    error = true;
+                    break;
+                }
+                push(fmod(pop(), op2));
+                break;
+            case '\n':
+                if(!error){
+                    if(top_called){
+                        printf("Ans:\t%.8g\n", (last_value = peek()));
+                        top_called = false;
+                    }else{
+                        printf("Ans:\t%.8g\n", (last_value = pop()));
+                    }
+                }else{
+                    error = false;
+                }
+                break;
+            default:
+                error = true;
+                break;
+        }
+    } 
     return 0;
 }
 
@@ -235,44 +225,19 @@ double peek(void){
     return stack[stack_ptr - 1];
 }
 
-/** @brief A function that gets the next character from a string buffer.
- *  @return The character in the input buffer pointed at by the pointer.
+int buf = EOF;
+
+/** @brief A function that gets a character from the stdin, but it
+ *         supports the use of a buffer, which contains a pushed-back value.
+ *  @return The character, either from stdin or the character buffer.
 */
 int getch(void){
-    return input_buf[buf_ptr++];
-}
-
-/** @brief A function that decrements the input buffer's pointer to point
- *         at the previous character.
- *  @return void.
-*/
-void ungetch(void){
-    if(buf_ptr <= 0){
-        fprintf(stderr, "Error! Buffer is full!\n");
-        return;
+    if(buf == EOF){
+        return getchar();
     }
-    buf_ptr--;
-}
-
-/** @brief A function that moves a line from stdin to a buffer while keeping track
- *         of its length. (This is modified to include the Newline character for it
- *         to work with the calculator). 
- *  @param buf The string buffer that will contain the captured line
- *  @param len The maximum length of a line
- *  @return The length of the captured line
-*/
-int n_getline(char buf[], size_t len){
-    int c = '\0';
-    size_t i = 0;
-    for(i = 0; i <= len && (c = getchar()) != EOF; i++){
-        buf[i] = c;
-        if(c == '\n'){
-            break;
-        }
-    }
-    buf[++i] = '\0';
-    if(c == EOF) return 0;
-    return i;
+    int c = buf;
+    buf = EOF;
+    return c;
 }
 
 /** @brief A function that reads characters entered by the user
@@ -284,12 +249,13 @@ int n_getline(char buf[], size_t len){
 int getop(char s[]){
     int c;
     size_t str_ptr = 0;
-    while(isblank((c = getch())));
-    ungetch();
-    while((c = getch()) != EOF && c != '\0'){
+    static int buf = EOF;
+    while(isblank((c = getchar())));
+    buf = c;
+    while((c = (buf != EOF) ? buf : getchar()) != EOF && c != '\0'){
         if(!isalnum(c) && c != '.'){
             if(str_ptr > 0){
-                ungetch();
+                buf = c;
                 s[str_ptr] = '\0';
                 if(isdigit(s[str_ptr - 1])){
                     return NUMBER;
@@ -302,19 +268,19 @@ int getop(char s[]){
                 int temp = 0;
                 if((c == '+' || c == '-') && isdigit((temp = getch()))){
                     s[str_ptr++] = c;
-                    ungetch();
+                    buf = temp;
                 }else if((c == '=')){
                     if(isalpha(temp = getch())){
                         s[str_ptr++] = temp;
                         s[stack_ptr] = '\0';
                         return SET_VAR;
                     }else{
-                        ungetch();
+                        buf = temp;
                     }
                 }else if((c == '_')){
                     return GET_LAST;
                 }else{
-                    if(temp) ungetch();
+                    if(temp) buf = temp;
                     return c;
                 }
             }
