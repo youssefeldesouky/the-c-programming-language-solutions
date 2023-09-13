@@ -225,21 +225,6 @@ double peek(void){
     return stack[stack_ptr - 1];
 }
 
-int buf = EOF;
-
-/** @brief A function that gets a character from the stdin, but it
- *         supports the use of a buffer, which contains a pushed-back value.
- *  @return The character, either from stdin or the character buffer.
-*/
-int getch(void){
-    if(buf == EOF){
-        return getchar();
-    }
-    int c = buf;
-    buf = EOF;
-    return c;
-}
-
 /** @brief A function that reads characters entered by the user
  *         and determines its type.
  *  @param s A character array that will store the number read from stdin.
@@ -250,12 +235,15 @@ int getop(char s[]){
     int c;
     size_t str_ptr = 0;
     static int buf = EOF;
-    while(isblank((c = getchar())));
+    static bool buf_set = false;
+    while(isblank((c = (buf_set) ? (buf_set = false, buf) : getchar())));
     buf = c;
-    while((c = (buf != EOF) ? buf : getchar()) != EOF && c != '\0'){
+    buf_set = true;
+    while ((c = (buf_set) ? (buf_set = false, buf) : getchar()) != EOF && c != '\0'){
         if(!isalnum(c) && c != '.'){
             if(str_ptr > 0){
                 buf = c;
+                buf_set = true;
                 s[str_ptr] = '\0';
                 if(isdigit(s[str_ptr - 1])){
                     return NUMBER;
@@ -266,21 +254,34 @@ int getop(char s[]){
                 }
             }else{
                 int temp = 0;
-                if((c == '+' || c == '-') && isdigit((temp = getch()))){
+                if ((c == '+' || c == '-') && isdigit((temp = (buf_set) ? (buf_set = false, buf) : getchar()))){
                     s[str_ptr++] = c;
                     buf = temp;
-                }else if((c == '=')){
-                    if(isalpha(temp = getch())){
+                    buf_set = true;
+                }
+                else if (c == '=')
+                {
+                    if (isalpha((temp = (buf_set) ? (buf_set = false, buf) : getchar()))){
                         s[str_ptr++] = temp;
                         s[stack_ptr] = '\0';
                         return SET_VAR;
-                    }else{
-                        buf = temp;
                     }
-                }else if((c == '_')){
+                    else
+                    {
+                        buf = temp;
+                        buf_set = true;
+                    }
+                }
+                else if ((c == '_'))
+                {
                     return GET_LAST;
-                }else{
-                    if(temp) buf = temp;
+                }
+                else
+                {
+                    if(temp){
+                        buf = temp;
+                        buf_set = true;
+                    }
                     return c;
                 }
             }
