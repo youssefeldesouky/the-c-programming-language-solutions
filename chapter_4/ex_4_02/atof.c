@@ -66,6 +66,7 @@ double atof(const char *src){
     return sign * value / power;
 }
 
+// To signal an EOF in terminal, used CTRL-D
 int main(){
     char src[] = "3.14159265358979";
     printf("%.14lf\n", atof(src));
